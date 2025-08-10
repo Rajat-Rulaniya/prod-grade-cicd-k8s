@@ -1,5 +1,5 @@
 ## Stage: 1 Building JAR file -------
-FROM maven:3.9.11-eclipse-temurin-8-alpine as builder
+FROM maven:3.9.11-eclipse-temurin-17-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 ## Stage: 2 Run JAR file -------
-FROM eclipse-temurin:8u462-b08-jre-alpine-3.22
+FROM eclipse-temurin:17-jre-alpine AS runner
 
 WORKDIR /app
 
