@@ -1,0 +1,36 @@
+# Database files
+data/
+*.mv.db
+*.db
+*.trace.db
+
+# Build files
+target/
+build/
+
+# Node modules (for frontend)
+node_modules/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Spring Boot
+application-local.properties
+
+.env*
