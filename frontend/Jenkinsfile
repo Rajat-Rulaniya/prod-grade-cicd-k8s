@@ -23,13 +23,10 @@ pipeline {
         stage('Image building') {
             steps {
                 dir('frontend') {
-                    script {
-                        def shortCommit = env.GIT_COMMIT.take(7)
-                        sh """
-                            docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
-                                         -t ${env.IMAGE_REPOSITORY}:${shortCommit} .
-                        """
-                    }
+                    sh """
+                        docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
+                                    -t ${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT} .
+                    """
                 }
             }
         }
