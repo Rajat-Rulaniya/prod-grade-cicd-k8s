@@ -11,9 +11,10 @@ pipeline {
     }
 
     stages {
-        stage('Test') {
+        stage('Install & Test') {
             steps {
                 dir('frontend') {
+                    sh 'npm ci'
                     sh 'npm test -- --watchAll=false'
                 }
             }
