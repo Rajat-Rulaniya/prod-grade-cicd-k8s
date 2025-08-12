@@ -30,6 +30,8 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh """
+                        echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin 
+
                         docker build \
                             -t ${env.IMAGE_TAG1} \
                             -t ${env.IMAGE_TAG2} .
