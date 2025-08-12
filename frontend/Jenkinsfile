@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        any {
+            customWorkspace ""
+        }
+    }
 
     environment {
         DOCKER_LOGIN = credentials('docker-login')
@@ -9,16 +13,20 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                sh 'npm test -- --watchAll=false'
+                dir('frontend') {
+                    sh 'npm test -- --watchAll=false'
+                }
             }
         }
 
         stage('Image building') {
             steps {
-                sh """
-                    docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
-                                 -t ${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT} .
-                """
+                dir('frontend') {
+                    sh """
+                        docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
+                                    -t ${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT} .
+                    """
+                }
             }
         }
 
