@@ -1,4 +1,14 @@
 import { render } from '@testing-library/react';
+
+// Mock axios as a virtual CommonJS module so Jest doesn't try to parse the ESM entry
+jest.mock('axios', () => ({
+  defaults: { baseURL: '' },
+  interceptors: {
+    request: { use: jest.fn() },
+    response: { use: jest.fn() }
+  }
+}), { virtual: true });
+
 import App from './App';
 
 // Mock the components to avoid axios and other dependencies

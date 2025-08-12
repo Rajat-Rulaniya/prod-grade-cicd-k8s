@@ -1,5 +1,5 @@
 ## Stage: 1 building the static files ------
-FROM node:alpine3.22 AS builder
+FROM node:alpine AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN npm run build
 
 ## Stage: 2 Serving the static files via nginx
 
-FROM nginx:stable-alpine3.21-perl AS production
+FROM nginx:stable-alpine AS production
 
 RUN rm -rf /usr/share/nginx/html/*
 

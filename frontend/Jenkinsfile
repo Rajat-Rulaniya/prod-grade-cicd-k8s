@@ -1,0 +1,44 @@
+pipeline {
+    agent {
+        node {
+            customWorkspace "${env.WORKSPACE}/frontend"
+        }
+    }
+
+    stages {
+        stage('Test') {
+            steps {
+                sh 'npm test -- --watchAll=false'
+            }
+        }
+
+        stage('Image building') {
+            steps {
+                sh """
+                    docker build -t rajatrulaniya/frontend:${env.BUILD_NUMBER} \
+                                 -t rajatrulaniya/frontend:${env.GIT_COMMIT} .
+
+                """
+            }
+        }
+
+        stage('Image Scanning') {
+            steps {
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL rajatrulaniya/frontend:${env.BUILD_NUMBER}"
+            }
+        }
+
+        stage('Image Upload') {
+            steps {
+                sh """
+                    docker push rajatrulaniya/frontend:${env.BUILD_NUMBER}
+                    docker push rajatrulaniya/frontend:${env.GIT_COMMIT}
+                """
+            }
+        }
+
+        // stage('Helm Deploy to EKS') {
+
+        // }
+    }
+}
