@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    
-    options {
-        customWorkspace "${env.WORKSPACE}/frontend"
-    }
 
     environment {
         DOCKER_LOGIN = credentials('docker-login')
