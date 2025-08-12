@@ -11,11 +11,11 @@ pipeline {
             steps {
                 dir('frontend') {
                     script {
-                        cache(cache: [
+                        cache(caches: [
                             arbitraryFileCache(
                                 cacheName: "frontend-npm-cache-${env.BRANCH_NAME ?: 'main'}",
                                 cacheValidityDecidingFile: 'package-lock.json',
-                                included: '**/*',
+                                includes: '**/*',
                                 excludes: '',
                                 path: "${env.HOME}/.npm"
                             )
