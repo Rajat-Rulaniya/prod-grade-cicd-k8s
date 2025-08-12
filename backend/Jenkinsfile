@@ -8,9 +8,11 @@ pipeline {
     
     stages {
         stage('Install and Test') {
-            dir('backend') {
-                sh "mvn dependency:go-offline -B"
-                sh "mvn test"
+            steps {
+                dir('backend') {
+                    sh "mvn dependency:go-offline -B"
+                    sh "mvn test"
+                }
             }
         }
 
@@ -25,14 +27,16 @@ pipeline {
         }
 
         stage('Image Build') {
-            dir('backend') {
-                sh """
-                    echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin
+            steps {
+                dir('backend') {
+                    sh """
+                        echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin
 
-                    docker build \
-                        -t ${env.IMAGE_TAG1} \
-                        -t ${env.IMAGE_TAG2} .
-                """
+                        docker build \
+                            -t ${env.IMAGE_TAG1} \
+                            -t ${env.IMAGE_TAG2} .
+                    """
+                }
             }
         }
 
