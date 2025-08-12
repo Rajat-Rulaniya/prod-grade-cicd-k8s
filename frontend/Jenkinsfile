@@ -1,9 +1,5 @@
 pipeline {
-    agent {
-        any {
-            customWorkspace ""
-        }
-    }
+    agent any
 
     environment {
         DOCKER_LOGIN = credentials('docker-login')
@@ -24,7 +20,7 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh """
-                        docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
+                        docker build -t ${env.IMAGE_REPOSITORY}:v${env.major}-${env.minor}-${env.BUILD_NUMBER} \
                                     -t ${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT} .
                     """
                 }
@@ -33,7 +29,7 @@ pipeline {
 
         stage('Image Scanning') {
             steps {
-                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER}"
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_REPOSITORY}:v${env.major}-${env.minor}-${env.BUILD_NUMBER}"
             }
         }
 
@@ -41,7 +37,7 @@ pipeline {
             steps {
                 sh """
                     echo "$DOCKER_LOGIN_PSW" | docker login -u "$DOCKER_LOGIN_USR" --password-stdin
-                    docker push ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER}
+                    docker push ${env.IMAGE_REPOSITORY}:v${env.major}-${env.minor}-${env.BUILD_NUMBER}
                     docker push ${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT}
                 """
             }
