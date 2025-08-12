@@ -10,8 +10,25 @@ pipeline {
         stage('Install & Test') {
             steps {
                 dir('frontend') {
-                    sh 'npm ci'
-                    sh 'npm test -- --watchAll=false || exit 1'
+                    script {
+                        cache(cache: [
+                            arbitraryFileCache(
+                                cacheName: "frontend-npm-cache-${env.BRANCH_NAME ?: 'main'}",
+                                cacheValidityDecidingFile: 'package-lock.json',
+                                included: '**/*',
+                                excludes: '',
+                                path: "${env.HOME}/.npm"
+                            )
+                        ], maxCacheSize: 1024) {
+                            sh '''
+                                echo "Using npm cache: $HOME/.npm"
+                                mkdir -p "$HOME/.npm"
+
+                                npm ci --prefer-offline --no-audit --cache "$HOME/.npm"
+                                npm test -- --watchAll=fale || exit 1
+                            '''
+                        }
+                    }
                 }
             }
         }
