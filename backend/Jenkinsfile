@@ -3,38 +3,34 @@ pipeline {
 
     environment {
         DOCKER_LOGIN = credentials('docker-login')
-        IMAGE_REPOSITORY = 'rajatrulaniya/inventory-frontend'
+        IMAGE_REPOSITORY = 'rajatrulaniya/inventory-backend'
     }
-
+    
     stages {
-        stage('Install & Test') {
-            steps {
-                dir('frontend') {
-                    sh 'npm ci'
-                    sh 'npm test -- --watchAll=false || exit 1'
-                }
+        stage('Install and Test') {
+            dir('backend') {
+                sh "mvn dependency:go-offline -B"
+                sh "mvn test"
             }
         }
 
         stage('Set Image tags') {
             steps {
                 script {
-                    env.IMAGE_TAG1 = "${env.IMAGE_REPOSITORY}:v${env.INVENTORY_FRONTEND_MAJOR}.${env.INVENTORY_FRONTEND_MINOR}.${env.BUILD_NUMBER}"
+                    env.IMAGE_TAG1 = "${env.IMAGE_REPOSITORY}:v${env.INVENTORY_BACKEND_MAJOR}.${env.INVENTORY_BACKEND_MINOR}.${env.BUILD_NUMBER}"
 
                     env.IMAGE_TAG2 = "${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT}"
                 }
             }
         }
 
-        stage('Image building') {
-            steps {
-                dir('frontend') {
-                    sh """
-                        docker build \
-                            -t ${env.IMAGE_TAG1} \
-                            -t ${env.IMAGE_TAG2} .
-                    """
-                }
+        stage('Image Build') {
+            dir('backend') {
+                sh """
+                    docker build \
+                        -t ${env.IMAGE_TAG1} \
+                        -t ${env.IMAGE_TAG2} .
+                """
             }
         }
 
@@ -58,14 +54,10 @@ pipeline {
                     docker push ${env.IMAGE_TAG2}
 
                     echo "Keeping only latest 4 images for frontend; Removing else (only frontend images will be removed)"
-
+                    
                     docker images ${env.IMAGE_REPOSITORY} -q | tail -n +5 | sort -u | xargs -r docker rmi -f
                 """
             }
         }
-
-        // stage('Helm Deploy to EKS') {
-
-        // }
     }
 }
