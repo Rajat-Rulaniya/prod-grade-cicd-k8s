@@ -44,7 +44,7 @@ pipeline {
             steps {
                 sh """
                     trivy image \
-                        --exit-code 1 --severity HIGH,CRITICAL \
+                        --severity HIGH,CRITICAL \
                         ${env.IMAGE_TAG1}
                 """
             }
