@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         DOCKER_LOGIN = credentials('docker-login')
-        IMAGE_REPOSITORY = 'rajatrulaniya/frontend'
+        IMAGE_REPOSITORY = 'rajatrulaniya/inventory-frontend'
     }
 
     stages {
@@ -23,10 +23,13 @@ pipeline {
         stage('Image building') {
             steps {
                 dir('frontend') {
-                    sh """
-                        docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
-                                    -t ${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT} .
-                    """
+                    script {
+                        def shortCommit = env.GIT_COMMIT.take(7)
+                        sh """
+                            docker build -t ${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} \
+                                         -t ${env.IMAGE_REPOSITORY}:${shortCommit} .
+                        """
+                    }
                 }
             }
         }
