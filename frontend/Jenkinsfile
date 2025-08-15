@@ -7,22 +7,6 @@ pipeline {
     }
 
     stages {
-        // stage('Install dependencies') {
-        //     steps {
-        //         dir('frontend') {
-        //             sh 'npm ci --no-audit'
-        //         }
-        //     }
-        // }
-
-        // stage('Test') {
-        //     steps {
-        //         dir('frontend') {
-        //             sh 'npm test -- --watchAll=false || exit 1'
-        //         }
-        //     }
-        // }
-
         stage('Set Image tags') {
             steps {
                 script {

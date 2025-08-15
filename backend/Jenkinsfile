@@ -7,21 +7,21 @@ pipeline {
     }
     
     stages {
-        stage('Install dependencies') {
-            steps {
-                dir('backend') {
-                    sh "mvn dependency:go-offline -B"
-                }
-            }
-        }
+        // stage('Install dependencies') {
+        //     steps {
+        //         dir('backend') {
+        //             sh "mvn dependency:go-offline -B"
+        //         }
+        //     }
+        // }
 
-        stage('Test') {
-            steps {
-                dir('backend') {
-                    sh "mvn test"
-                }
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         dir('backend') {
+        //             sh "mvn test"
+        //         }
+        //     }
+        // }
 
         stage('Set Image tags') {
             steps {
@@ -29,6 +29,17 @@ pipeline {
                     env.IMAGE_TAG1 = "${env.IMAGE_REPOSITORY}:v${env.INVENTORY_BACKEND_MAJOR}.${env.INVENTORY_BACKEND_MINOR}.${env.BUILD_NUMBER}"
 
                     env.IMAGE_TAG2 = "${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT}"
+                }
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('backend') {
+                    sh """
+                        docker build -t inventory-backend-tester --target builder .
+                        docker run --rm inventory-backend-tester mvn test || exit 1
+                    """
                 }
             }
         }
