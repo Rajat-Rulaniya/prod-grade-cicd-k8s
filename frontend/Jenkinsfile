@@ -7,7 +7,7 @@ pipeline {
     }
 
     stages {
-        stage('Install') {
+        stage('Install dependencies') {
             steps {
                 dir('frontend') {
                     sh 'npm ci --no-audit'

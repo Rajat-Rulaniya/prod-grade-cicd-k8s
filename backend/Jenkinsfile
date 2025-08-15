@@ -7,10 +7,17 @@ pipeline {
     }
     
     stages {
-        stage('Install and Test') {
+        stage('Install dependencies') {
             steps {
                 dir('backend') {
                     sh "mvn dependency:go-offline -B"
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('backend') {
                     sh "mvn test"
                 }
             }
