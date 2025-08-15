@@ -7,21 +7,21 @@ pipeline {
     }
 
     stages {
-        stage('Install dependencies') {
-            steps {
-                dir('frontend') {
-                    sh 'npm ci --no-audit'
-                }
-            }
-        }
+        // stage('Install dependencies') {
+        //     steps {
+        //         dir('frontend') {
+        //             sh 'npm ci --no-audit'
+        //         }
+        //     }
+        // }
 
-        stage('Test') {
-            steps {
-                dir('frontend') {
-                    sh 'npm test -- --watchAll=false || exit 1'
-                }
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         dir('frontend') {
+        //             sh 'npm test -- --watchAll=false || exit 1'
+        //         }
+        //     }
+        // }
 
         stage('Set Image tags') {
             steps {
@@ -29,6 +29,17 @@ pipeline {
                     env.IMAGE_TAG1 = "${env.IMAGE_REPOSITORY}:v${env.INVENTORY_FRONTEND_MAJOR}.${env.INVENTORY_FRONTEND_MINOR}.${env.BUILD_NUMBER}"
 
                     env.IMAGE_TAG2 = "${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT}"
+                }
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('frontend') {
+                    sh """
+                        docker build -t inventory-frontend-tester --target builder .
+                        docker run -rm inventory-frontend-tester npm test -- --watchAll=false || exit 1
+                    """
                 }
             }
         }
