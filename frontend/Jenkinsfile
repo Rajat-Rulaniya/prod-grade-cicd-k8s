@@ -7,7 +7,7 @@ pipeline {
     }
 
     stages {
-        stage('Install & Test') {
+        stage('Install') {
             steps {
                 dir('frontend') {
                     script {
@@ -18,12 +18,17 @@ pipeline {
                                 path: "node_modules"
                             )
                         ], maxCacheSize: 1024) {
-                            sh '''
-                                npm ci --no-audit
-                                npm test -- --watchAll=false || exit 1
-                            '''
+                            sh 'npm ci --no-audit'
                         }
                     }
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('frontend') {
+                    sh 'npm test -- --watchAll=false || exit 1'
                 }
             }
         }
