@@ -38,7 +38,7 @@ pipeline {
                 dir('frontend') {
                     sh """
                         docker build -t inventory-frontend-tester --target builder .
-                        docker run -rm inventory-frontend-tester npm test -- --watchAll=false || exit 1
+                        docker run --rm inventory-frontend-tester npm test -- --watchAll=false || exit 1
                     """
                 }
             }
