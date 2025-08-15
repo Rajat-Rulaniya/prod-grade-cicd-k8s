@@ -15,17 +15,12 @@ pipeline {
                             arbitraryFileCache(
                                 cacheName: "frontend-npm-cache-${env.BRANCH_NAME ?: 'main'}",
                                 cacheValidityDecidingFile: 'package-lock.json',
-                                includes: '**/*',
-                                excludes: '',
-                                path: "${env.HOME}/.npm"
+                                path: "node_modules"
                             )
                         ], maxCacheSize: 1024) {
                             sh '''
-                                echo "Using npm cache: $HOME/.npm"
-                                mkdir -p "$HOME/.npm"
-
-                                npm ci --prefer-offline --no-audit --cache "$HOME/.npm"
-                                npm test -- --watchAll=fale || exit 1
+                                npm ci --no-audit
+                                npm test -- --watchAll=false || exit 1
                             '''
                         }
                     }
