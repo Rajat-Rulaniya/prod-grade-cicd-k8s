@@ -10,17 +10,7 @@ pipeline {
         stage('Install') {
             steps {
                 dir('frontend') {
-                    script {
-                        cache(caches: [
-                            arbitraryFileCache(
-                                cacheName: "frontend-npm-cache-${env.BRANCH_NAME ?: 'main'}",
-                                cacheValidityDecidingFile: 'package-lock.json',
-                                path: "node_modules"
-                            )
-                        ], maxCacheSize: 1024) {
-                            sh 'npm ci --no-audit'
-                        }
-                    }
+                    sh 'npm ci --no-audit'
                 }
             }
         }
