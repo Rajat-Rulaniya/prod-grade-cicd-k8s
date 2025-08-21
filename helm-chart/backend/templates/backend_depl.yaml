@@ -18,13 +18,13 @@ spec:
           env:
             - name: DB_HOST
               valueFrom:
-                configMapRef:
+                configMapKeyRef:
                   name: inventory-app-config
                   key: DB_HOST
 
             - name: DB_PORT
               valueFrom:
-                configMapRef:
+                configMapKeyRef:
                   name: inventory-app-config
                   key: DB_PORT
             - name: DB_USER
