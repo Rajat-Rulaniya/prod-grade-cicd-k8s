@@ -10,9 +10,9 @@ pipeline {
         stage('Set Image tags') {
             steps {
                 script {
-                    env.IMAGE_TAG1 = "${env.IMAGE_REPOSITORY}:v${env.INVENTORY_FRONTEND_MAJOR}.${env.INVENTORY_FRONTEND_MINOR}.${env.BUILD_NUMBER}"
+                    env.IMAGE_TAG1 = "v${env.INVENTORY_FRONTEND_MAJOR}.${env.INVENTORY_FRONTEND_MINOR}.${env.BUILD_NUMBER}"
 
-                    env.IMAGE_TAG2 = "${env.IMAGE_REPOSITORY}:${env.GIT_COMMIT}"
+                    env.IMAGE_TAG2 = "${env.GIT_COMMIT}"
                 }
             }
         }
@@ -43,8 +43,8 @@ pipeline {
                         echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin 
 
                         docker build \
-                            -t ${env.IMAGE_TAG1} \
-                            -t ${env.IMAGE_TAG2} .
+                            -t ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1} \
+                            -t ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG2} .
                     """
                 }
             }
@@ -55,7 +55,7 @@ pipeline {
                 sh """
                     trivy image \
                         --exit-code 1 --severity HIGH,CRITICAL \
-                        ${env.IMAGE_TAG1}
+                        ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}
                 """
             }
         }
@@ -65,19 +65,24 @@ pipeline {
                 sh """
                     echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin 
 
-                    docker push ${env.IMAGE_TAG1}
+                    docker push ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}
 
-                    docker push ${env.IMAGE_TAG2}
+                    docker push ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG2}
 
-                    echo "Keeping only latest 4 images for frontend; Removing else (only frontend images will be removed)"
+                    echo "Keeping only latest 4 images for frontend; Removing older ones..."
 
-                    docker images ${env.IMAGE_REPOSITORY} -q | tail -n +5 | sort -u | xargs -r docker rmi -f
+                    docker images ${env.IMAGE_REPOSITORY} -q | sort -u | tail -n +5 | xargs -r docker rmi -f
                 """
             }
         }
 
-        // stage('Helm Deploy to EKS') {
-
-        // }
+        stage('Helm Deploy to EKS') {
+          steps {
+            sh """
+                helm upgrade --install inventory-frontend ./helm-chart/frontend \
+                  --set image.tag=${env.IMAGE_TAG1} \    
+            """
+          }
+        }
     }
 }
