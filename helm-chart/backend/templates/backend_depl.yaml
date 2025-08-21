@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-backend-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: inventory-backend
+  template:
+    metadata:
+      labels:
+        app: inventory-backend
+    spec:
+      containers:
+        - name: inventory-backend-container
+          image: "{{ .Values.image.repository}}:{{ .Values.image.tag}}"
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapRef:
+                  name: inventory-app-config
+                  key: DB_HOST
+
+            - name: DB_PORT
+              valueFrom:
+                configMapRef:
+                  name: inventory-app-config
+                  key: DB_PORT
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: inventory-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: inventory-db-secret
+                  key: password
+                    
+

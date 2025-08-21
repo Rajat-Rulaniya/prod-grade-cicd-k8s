@@ -34,3 +34,4 @@ logs/
 application-local.properties
 
 .env*
+secrets.yaml

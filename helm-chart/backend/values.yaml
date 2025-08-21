@@ -1,0 +1,8 @@
+image:
+  repository: rajatrulaniya/inventory-backend
+  tag: "latest" ## overridden by CI/CD
+
+replicaCount: 1
+
+db_host: host.db.com ## overridden by CI/CD
+db_port: "5432"

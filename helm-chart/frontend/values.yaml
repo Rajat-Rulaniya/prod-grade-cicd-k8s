@@ -1,0 +1,5 @@
+image:
+  repository: rajatrulaniya/inventory-frontend
+  tag: "latest" ## overridden by CI/CD
+
+replicaCount: 1
