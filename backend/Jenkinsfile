@@ -17,6 +17,14 @@ pipeline {
             }
         }
 
+        stage('Update CORS') {
+          steps {
+            dir('backend') {
+              sh "sed -i 's|FRONTEND_HOST:FRONTEND_PORT|${env.FRONTEND_HOST}:${env.FRONTEND_PORT}|' src/main/resources/application.properties"
+            }
+          }
+        }
+
         stage('Build & Test') {
             steps {
                 dir('backend') {
