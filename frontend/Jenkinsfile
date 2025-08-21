@@ -80,7 +80,7 @@ pipeline {
           steps {
             sh """
                 helm upgrade --install inventory-frontend ./helm-chart/frontend \
-                  --set image.tag=${env.IMAGE_TAG1} \    
+                  --set image.tag=${env.IMAGE_TAG1}
             """
           }
         }
