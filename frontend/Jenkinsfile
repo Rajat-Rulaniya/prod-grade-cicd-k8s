@@ -20,7 +20,7 @@ pipeline {
         stage('Update backend-url') {
           steps {
             dir('frontend') {
-              sh 'sed -i "s|backend-host:port|${env.BACKEND_HOST}:${env.BACKEND_PORT}|" .env'
+              sh "sed -i 's|backend-host:port|${env.BACKEND_HOST}:${env.BACKEND_PORT}|' .env"
             }
           }
         }
