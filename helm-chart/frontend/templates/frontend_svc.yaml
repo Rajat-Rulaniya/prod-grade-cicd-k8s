@@ -5,9 +5,10 @@ metadata:
   name: frontend-service
 
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: inventory-frontend
   ports:
     - port: 80
       targetPort: 80
+      nodePort: 30080

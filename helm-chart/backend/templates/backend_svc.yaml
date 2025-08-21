@@ -5,10 +5,11 @@ metadata:
   name: backend-service
 
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: inventory-backend
 
   ports:
     - port: 8080
       targetPort: 8080
+      nodePort: 30081
