@@ -37,5 +37,17 @@ spec:
                 secretKeyRef:
                   name: inventory-db-secret
                   key: password
+
+            - name: FRONTEND_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: inventory-app-config
+                  key: FRONTEND_HOST
+
+            - name: FRONTEND_PORT
+              valueFrom:
+                configMapKeyRef:  
+                  name: inventory-app-config
+                  key: FRONTEND_PORT
                     
 

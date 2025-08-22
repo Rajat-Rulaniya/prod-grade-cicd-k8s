@@ -7,3 +7,5 @@ metadata:
 data:
   DB_HOST: {{ .Values.db_host | quote }}
   DB_PORT: {{ .Values.db_port | quote }}
+  FRONTEND_HOST: {{ .Values.frontend_host | quote }}
+  FRONTEND_PORT: {{ .Values.frontend_port | quote }}

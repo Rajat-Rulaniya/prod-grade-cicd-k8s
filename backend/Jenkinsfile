@@ -17,14 +17,6 @@ pipeline {
             }
         }
 
-        stage('Update CORS') {
-          steps {
-            dir('backend') {
-              sh "sed -i 's|FRONTEND_HOST:FRONTEND_PORT|${env.FRONTEND_HOST}:${env.FRONTEND_PORT}|' src/main/resources/application.properties"
-            }
-          }
-        }
-
         stage('Build & Test') {
             steps {
                 dir('backend') {
@@ -80,8 +72,10 @@ pipeline {
           steps {
             sh """
                 helm upgrade --install inventory-backend ./helm-chart/backend \
-                  --set image.tag=${env.IMAGE_TAG1} \
-                  --set db_host="${env.INVENTORY_DB_HOST}"             
+                  --set image.tag="${env.IMAGE_TAG1}" \
+                  --set db_host="${env.INVENTORY_DB_HOST}" \
+                  --set frontend_host="${env.FRONTEND_HOST}" \
+                  --set frontend_port="${env.FRONTEND_PORT}"
             """
           }
         }
