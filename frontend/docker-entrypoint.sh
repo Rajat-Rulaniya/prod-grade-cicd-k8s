@@ -1,4 +1,10 @@
 #!/bin/bash
 
-envsubst < /usr/share/nginx/html/config.template.js > /usr/share/nginx/html/config.js
+: ${BACKEND_HOST:=localhost}
+: ${BACKEND_PORT:=8080}
+
+cat << EOF > /usr/share/nginx/html/config.js
+window.__BACKEND_URL__ = "http://${BACKEND_HOST}:${BACKEND_PORT}";
+EOF
+
 exec "$@"

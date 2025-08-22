@@ -19,8 +19,6 @@ RUN rm -rf /usr/share/nginx/html/*
 
 COPY --from=builder /app/build/ /usr/share/nginx/html/
 
-COPY ./src/config.template.js /usr/share/nginx/html/config.template.js
-
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 

@@ -1,1 +1,0 @@
-window.__BACKEND_URL__ = "http://${BACKEND_HOST}:${BACKEND_PORT}";
