@@ -12,7 +12,7 @@ import './App.css';
 
 // Configure axios defaults
 // Prefer env override; otherwise use same-origin so Nginx/Reverse proxy can route /api -> backend
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || window.location.origin;
+axios.defaults.baseURL = window.__BACKEND_URL__ || process.env.REACT_APP_API_BASE_URL || window.location.origin;
 
 // Add request interceptor to include auth token
 axios.interceptors.request.use(

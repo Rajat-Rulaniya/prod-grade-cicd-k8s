@@ -15,3 +15,15 @@ spec:
       containers:
         - name: inventory-frontend-container
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: REACT_APP_API_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: inventory-app-config-frontend
+                  key: backend_host
+
+            - name: REACT_APP_API_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: inventory-app-config-frontend
+                  key: backend_port

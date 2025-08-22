@@ -19,13 +19,12 @@ spec:
             - name: DB_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: inventory-app-config
+                  name: inventory-app-config-backend
                   key: DB_HOST
-
             - name: DB_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: inventory-app-config
+                  name: inventory-app-config-backend
                   key: DB_PORT
             - name: DB_USER
               valueFrom:
@@ -41,13 +40,13 @@ spec:
             - name: FRONTEND_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: inventory-app-config
+                  name: inventory-app-config-backend
                   key: FRONTEND_HOST
 
             - name: FRONTEND_PORT
               valueFrom:
                 configMapKeyRef:  
-                  name: inventory-app-config
+                  name: inventory-app-config-backend
                   key: FRONTEND_PORT
                     
 

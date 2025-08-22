@@ -17,15 +17,15 @@ pipeline {
             }
         }
 
-        stage('Update backend-url') {
-          steps {
-            dir('frontend') {
-              sh """
-                echo REACT_APP_API_BASE_URL=http://${BACKEND_HOST}:${BACKEND_PORT} > .env
-              """
-            }
-          }
-        }
+        // stage('Update backend-url') {
+        //   steps {
+        //     dir('frontend') {
+        //       sh """
+        //         echo REACT_APP_API_BASE_URL=http://${BACKEND_HOST}:${BACKEND_PORT} > .env
+        //       """
+        //     }
+        //   }
+        // }
 
         stage('Build & Test') {
             steps {
@@ -82,7 +82,9 @@ pipeline {
           steps {
             sh """
                 helm upgrade --install inventory-frontend ./helm-chart/frontend \
-                  --set image.tag=${env.IMAGE_TAG1}
+                  --set image.tag=${env.IMAGE_TAG1} \
+                  --set backend_host=${env.BACKEND_HOST} \
+                  --set backend_port=${env.BACKEND_PORT}
             """
           }
         }
