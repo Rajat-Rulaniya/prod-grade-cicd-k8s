@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 : ${BACKEND_HOST:=localhost}
 : ${BACKEND_PORT:=8080}
