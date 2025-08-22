@@ -7,7 +7,7 @@ COPY ./package*.json ./
 
 RUN npm ci
 
-COPY ./src ./public ./
+COPY . .
 
 RUN npm run build
 
