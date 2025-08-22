@@ -73,7 +73,7 @@ pipeline {
 
                     echo "Keeping only latest 4 images for frontend; Removing older ones..."
 
-                    docker images ${env.IMAGE_REPOSITORY} -q | sort -u | tail -n +5 | xargs -r docker rmi -f
+                    docker images ${env.IMAGE_REPOSITORY} --format "{{.ID}} {{.CreatedAt}}" | sort -r -k2 | awk 'NR>4 {print $1}' | sort -u | xargs -r docker rmi -f
                 """
             }
         }
