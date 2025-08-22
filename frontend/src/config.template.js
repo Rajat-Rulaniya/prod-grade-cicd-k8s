@@ -1,1 +1,1 @@
-window.__BACKEND_URL__ = "http://${REACT_APP_API_HOST}:${REACT_APP_API_PORT}";
+window.__BACKEND_URL__ = "http://${BACKEND_HOST}:${BACKEND_PORT}";
