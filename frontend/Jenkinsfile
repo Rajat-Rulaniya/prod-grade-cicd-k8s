@@ -17,16 +17,6 @@ pipeline {
             }
         }
 
-        // stage('Update backend-url') {
-        //   steps {
-        //     dir('frontend') {
-        //       sh """
-        //         echo REACT_APP_API_BASE_URL=http://${BACKEND_HOST}:${BACKEND_PORT} > .env
-        //       """
-        //     }
-        //   }
-        // }
-
         stage('Build & Test') {
             steps {
                 dir('frontend') {

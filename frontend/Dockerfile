@@ -19,7 +19,7 @@ RUN rm -rf /usr/share/nginx/html/*
 
 COPY --from=builder /app/build/ /usr/share/nginx/html/
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
