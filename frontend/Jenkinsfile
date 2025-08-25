@@ -74,11 +74,11 @@ pipeline {
         stage('Determine Colors') {
           steps {
             script {
-              env.ACTIVE_COLOR = sh(script: "set +e; kubectl get svc frontend-service -o jsonpath='{.spec.selector.color}' || echo ''", returnStdout: true).trim()
+              env.ACTIVE_COLOR = sh(script: "kubectl get svc frontend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''", returnStdout: true).trim()
 
               env.NEW_COLOR = (ACTIVE_COLOR == "blue") ? "green" : "blue"
 
-              if (!ACTIVE_COLOR) {
+              if (!env.ACTIVE_COLOR) {
                 env.FIRST_DEPLOYMENT = true
                 env.ACTIVE_COLOR = "blue"
               }
