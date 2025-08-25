@@ -2,3 +2,4 @@ node_modules
 bulid
 .git
 tests
+Jenkinsfile
