@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: inventory-frontend-deployment
+  name: "inventory-frontend-{{ .Values.color }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: inventory-frontend
+        color: {{ .Values.color }}
     spec:
       containers:
         - name: inventory-frontend-container

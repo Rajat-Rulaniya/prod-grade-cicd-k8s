@@ -6,3 +6,6 @@ replicaCount: 1
 
 backend_host: api.domain.com ## overridden by CI/CD
 backend_port: 8080 ## overridden by CI/CD
+
+color: blue ## overridden by CI/CD
+activeColor: blue ## overridden by CI/CD

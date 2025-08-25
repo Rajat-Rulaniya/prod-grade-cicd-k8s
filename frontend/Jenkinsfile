@@ -4,6 +4,9 @@ pipeline {
     environment {
         DOCKER_LOGIN = credentials('docker-login')
         IMAGE_REPOSITORY = 'rajatrulaniya/inventory-frontend'
+        ACTIVE_COLOR = ''
+        NEW_COLOR = ''
+        FIRST_DEPLOYMENT = false
     }
 
     stages {
@@ -68,14 +71,59 @@ pipeline {
             }
         }
 
-        stage('Helm Deploy to EKS') {
+        stage('Determine Colors') {
+          steps {
+            script {
+              env.ACTIVE_COLOR = sh(script: "kubectl get svc frontend-service -o jsonpath='{.spec.selector.color}' || echo ''", returnStdout: true).trim()
+
+              env.NEW_COLOR = (ACTIVE_COLOR == "blue") ? "green" : "blue"
+
+              if (!ACTIVE_COLOR) {
+                env.FIRST_DEPLOYMENT = true
+                env.ACTIVE_COLOR = "blue"
+              }
+            }
+          }
+        }
+
+        stage('Helm Deploy to Idle color') {
           steps {
             sh """
-                helm upgrade --install inventory-frontend ./helm-chart/frontend \
+                helm upgrade --install inventory-frontend-${env.NEW_COLOR} ./helm-chart/frontend \
                   --set image.tag=${env.IMAGE_TAG1} \
+                  --set activeColor=${env.ACTIVE_COLOR} \
+                  --set color=${env.NEW_COLOR} \
                   --set backend_host=${env.BACKEND_HOST} \
                   --set backend_port=${env.BACKEND_PORT}
             """
+          }
+        }
+
+        stage('Check status of new Deployment') {
+          steps {
+            sh """
+              sleep 7
+              kubectl rollout status deployment/inventory-frontend-${env.NEW_COLOR} --timeout=2m
+            """
+          }
+          post {
+            failure {
+              echo "The new deployment failed, COLOR: ${env.NEW_COLOR}"
+            }
+          }
+        }
+
+        stage('Switch Traffic') {
+          steps {
+            script {
+              sh """
+                kubectl patch svc frontend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
+              """
+
+              if (!FIRST_DEPLOYMENT) {
+                sh "kubectl delete deployment inventory-frontend-${env.ACTIVE_COLOR} || true"
+              }
+            }
           }
         }
     }
