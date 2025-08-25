@@ -74,7 +74,10 @@ pipeline {
         stage('Determine Colors') {
           steps {
             script {
-              def activeColor = sh(script: "set +e; kubectl get svc frontend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''", returnStdout: true).trim()
+              def activeColor = sh(
+                script: "set +e; kubectl get svc frontend-service -o jsonpath=\"{.spec.selector.color}\" 2>/dev/null || echo ''",
+                returnStdout: true
+              ).trim()
 
               def first_deployment = "false"
               def newColor
