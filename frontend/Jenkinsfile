@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_LOGIN = credentials('docker-login')
-        IMAGE_REPOSITORY = 'rajatrulaniya/inventory-frontend'
-        ACTIVE_COLOR = ''
-        NEW_COLOR = ''
-        FIRST_DEPLOYMENT = false
+      DOCKER_LOGIN = credentials('docker-login')
+      IMAGE_REPOSITORY = 'rajatrulaniya/inventory-frontend'
+      ACTIVE_COLOR = ''
+      NEW_COLOR = ''
+      FIRST_DEPLOYMENT = false
     }
 
     stages {
@@ -74,15 +74,22 @@ pipeline {
         stage('Determine Colors') {
           steps {
             script {
-              env.ACTIVE_COLOR = sh(script: "set +e; kubectl get svc frontend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''", returnStdout: true).trim()
+              def activeColor = sh(script: "set +e; kubectl get svc frontend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''", returnStdout: true).trim()
 
-              if (env.ACTIVE_COLOR == '') {
-                env.FIRST_DEPLOYMENT = true
-                env.ACTIVE_COLOR = "blue"
-                env.NEW_COLOR = "blue"
+              def first_deployment = "false"
+              def newColor
+
+              if (activeColor == '') {
+                first_deployment = "true"
+                activeColor = "blue"
+                newColor = "blue"
               } else {
-                env.NEW_COLOR = (env.ACTIVE_COLOR == "blue") ? "green" : "blue"
+                newColor = (activeColor == "blue") ? "green" : "blue"
               }
+
+              env.ACTIVE_COLOR = activeColor
+              env.NEW_COLOR = newColor
+              env.FIRST_DEPLOYMENT = first_deployment
             }
           }
         }
@@ -117,12 +124,11 @@ pipeline {
         stage('Switch Traffic') {
           steps {
             script {
-              sh """
-                kubectl patch svc frontend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
-              """
-
-              if (!FIRST_DEPLOYMENT) {
+              if (!env.FIRST_DEPLOYMENT.toBoolean()) {
                 sh "kubectl delete deployment inventory-frontend-${env.ACTIVE_COLOR} || true"
+                sh """
+                  kubectl patch svc frontend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
+                """
               }
             }
           }
