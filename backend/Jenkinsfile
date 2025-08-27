@@ -123,7 +123,7 @@ pipeline {
         stage('Check Deployment Status') {
           steps {
             sh "sleep 7"
-            sh "kubectl rollout status inventory-backend-${env.NEW_COLOR} --timeout=2m"
+            sh "kubectl rollout status deployment inventory-backend-${env.NEW_COLOR} --timeout=2m"
           }
           post {
             failure {
