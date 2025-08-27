@@ -111,7 +111,7 @@ pipeline {
             sh """
               helm upgrade --install inventory-backend-${env.NEW_COLOR} ./helm-charts/backend \
                 --set image.tag=${env.IMAGE_TAG1} \
-                --set db_host=${env.DB_HOST} \
+                --set db_host=${env.INVENTORY_DB_HOST} \
                 --set color=${env.NEW_COLOR} \
                 --set activeColor=${env.ACTIVE_COLOR} \
                 --set frontend_host=${env.FRONTEND_HOST} \
