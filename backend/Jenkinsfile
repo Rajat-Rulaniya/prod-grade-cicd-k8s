@@ -87,7 +87,7 @@ pipeline {
                 newColor = (activeColor == "blue") ? "green" : "blue"
               }
 
-              env.FIRST_DEPLOYMENT = "true"
+              env.FIRST_DEPLOYMENT = first_deployment
               env.ACTIVE_COLOR = activeColor
               env.NEW_COLOR = newColor
             }
@@ -139,7 +139,7 @@ pipeline {
         stage('Switch Traffic') {
           steps {
             script {
-              if ( !env.FIRST_DEPLOYMENT.toBoolean() ) {
+              if (!env.FIRST_DEPLOYMENT.toBoolean()) {
                 sh """
                   kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
                 """
