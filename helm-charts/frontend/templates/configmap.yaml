@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 
 metadata:
-  name: inventory-app-config-frontend
+  name: "inventory-app-config-frontend-{{ .Values.color }}"
 
 data:
   backend_host: {{ .Values.backend_host | quote }}

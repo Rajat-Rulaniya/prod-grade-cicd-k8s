@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: inventory-backend-deployment
+  name: "inventory-backend-deployment-{{ .Values.color }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:

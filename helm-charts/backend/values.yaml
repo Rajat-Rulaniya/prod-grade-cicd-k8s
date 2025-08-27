@@ -9,3 +9,6 @@ db_port: "5432"
 
 frontend_host: app.domain.com ## overridden by CI/CD
 frontend_port: 3000 ## overridden by CI/CD
+
+color: blue ## overridden by CI/CD
+activeColor: blue ## overridden by CI/CD

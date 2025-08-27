@@ -4,9 +4,6 @@ pipeline {
     environment {
       DOCKER_LOGIN = credentials('docker-login')
       IMAGE_REPOSITORY = 'rajatrulaniya/inventory-frontend'
-      ACTIVE_COLOR = ''
-      NEW_COLOR = ''
-      FIRST_DEPLOYMENT = false
     }
 
     stages {
@@ -71,13 +68,15 @@ pipeline {
             }
         }
 
-        stage('Determine Colors') {
+        stage('Determinining Color') {
           steps {
             script {
               def activeColor = sh(
                 script: "set +e; kubectl get svc frontend-service -o jsonpath=\"{.spec.selector.color}\" 2>/dev/null || echo ''",
                 returnStdout: true
               ).trim()
+
+              echo "Active color recieved is: ${activeColor}"
 
               def first_deployment = "false"
               def newColor
@@ -90,17 +89,29 @@ pipeline {
                 newColor = (activeColor == "blue") ? "green" : "blue"
               }
 
-              env.ACTIVE_COLOR = activeColor
-              env.NEW_COLOR = newColor
-              env.FIRST_DEPLOYMENT = first_deployment
+              env.ACTIVE_COLOR = "${activeColor}"
+              env.NEW_COLOR = "${newColor}"
+              env.FIRST_DEPLOYMENT = "${first_deployment}"
             }
           }
         }
 
-        stage('Helm Deploy to Idle color') {
+        stage('Apply Base Manifests') {
+          when {
+            expression { env.FIRST_DEPLOYMENT.toBoolean() }
+          }
           steps {
             sh """
-                helm upgrade --install inventory-frontend-${env.NEW_COLOR} ./helm-chart/frontend \
+              kubectl apply -f ./base-k8s/frontend/
+              kubectl patch svc frontend-service -p '{"spec":{"selector":{"color":"blue"}}}'
+            """
+          }
+        }
+
+        stage('Helm Deploy to ${env.NEW_COLOR} Color') {
+          steps {
+            sh """
+                helm upgrade --install inventory-frontend-${env.NEW_COLOR} ./helm-charts/frontend \
                   --set image.tag=${env.IMAGE_TAG1} \
                   --set activeColor=${env.ACTIVE_COLOR} \
                   --set color=${env.NEW_COLOR} \
@@ -120,18 +131,24 @@ pipeline {
           post {
             failure {
               echo "The new deployment failed, COLOR: ${env.NEW_COLOR}"
+
+              // Can be added: Delete the new deployment on failure.
             }
           }
         }
+
+        // Checks can be added before switching traffic to new deployment
 
         stage('Switch Traffic') {
           steps {
             script {
               if (!env.FIRST_DEPLOYMENT.toBoolean()) {
-                sh "kubectl delete deployment inventory-frontend-${env.ACTIVE_COLOR} || true"
                 sh """
                   kubectl patch svc frontend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
                 """
+
+                // OPTIONAL: Delete the previous color only when you are sure that the current color is working fine.
+                // sh "kubectl delete deployment inventory-frontend-${env.ACTIVE_COLOR} || true"
               }
             }
           }

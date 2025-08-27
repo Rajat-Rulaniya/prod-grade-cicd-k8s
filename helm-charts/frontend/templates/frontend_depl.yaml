@@ -20,11 +20,11 @@ spec:
             - name: BACKEND_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: inventory-app-config-frontend
+                  name: "inventory-app-config-frontend-{{ .Values.color }}"
                   key: backend_host
 
             - name: BACKEND_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: inventory-app-config-frontend
+                  name: "inventory-app-config-frontend-{{ .Values.color }}"
                   key: backend_port

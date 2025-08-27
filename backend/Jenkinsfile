@@ -68,15 +68,85 @@ pipeline {
             }
         }
 
-        stage('Helm Deploy to EKS') {
+        stage('Determining Color') {
+          steps {
+            script {
+              def activeColor = sh(
+                script: "kubectl get svc backend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''",
+                returnStdout: true
+              ).trim()
+
+              def newColor
+              def first_deployment = "false"
+
+              if (activeColor == '') {
+                first_deployment = "true"
+                newColor = "blue"
+                activeColor = "blue"
+              } else {
+                newColor = (activeColor == "blue") ? "green" : "blue"
+              }
+
+              env.FIRST_DEPLOYMENT = "true"
+              env.ACTIVE_COLOR = activeColor
+              env.NEW_COLOR = newColor
+            }
+          }
+        }
+
+        stage('Apply base manifests') {
+          when {
+            expression { env.FIRST_DEPLOYMENT.toBoolean() }
+          }
           steps {
             sh """
-                helm upgrade --install inventory-backend ./helm-chart/backend \
-                  --set image.tag="${env.IMAGE_TAG1}" \
-                  --set db_host="${env.INVENTORY_DB_HOST}" \
-                  --set frontend_host="${env.FRONTEND_HOST}" \
-                  --set frontend_port="${env.FRONTEND_PORT}"
+              kubectl apply -f ./base-k8s/backend/
+              kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"blue"}}}'
             """
+          }
+        }
+
+        stage("Helm Deploy to ${env.NEW_COLOR} Color") {
+          steps {
+            sh """
+              helm upgrade --install inventory-backend-${env.NEW_COLOR} ./helm-charts/backend \
+                --set image.tag=${env.IMAGE_TAG1}
+                --set db_host=${env.DB_HOST}
+                --set color=${env.NEW_COLOR}
+                --set activeColor=${env.ACTIVE_COLOR}
+                --set frontend_host=${env.FRONTEND_HOST}
+                --set frontend_port=${env.FRONTEND_PORT}
+            """
+          }
+        }
+
+        stage('Check Deployment Status') {
+          steps {
+            sh "sleep 7"
+            sh "kubectl rollout status inventory-backend-${env.NEW_COLOR} --timeout=2m"
+          }
+          post {
+            failure {
+              echo "The new deployment failed, COLOR: ${env.NEW_COLOR}"
+
+              // Can be added: Delete the new deployment on failure.
+            }
+          }
+        }
+
+        // Checks can be added before switching traffic to new deployment
+
+        stage('Switch Traffic') {
+          steps {
+            script {
+              if ( !env.FIRST_DEPLOYMENT.toBoolean() ) {
+                sh """
+                  kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
+                """
+
+                // OPTIONAL: Delete the previous color only when you are sure that the current color is working fine.
+              }
+            }
           }
         }
     }
