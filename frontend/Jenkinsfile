@@ -108,7 +108,7 @@ pipeline {
           }
         }
 
-        stage('Helm Deploy to ${env.NEW_COLOR} Color') {
+        stage('Helm Deploy to Cluster') {
           steps {
             sh """
                 helm upgrade --install inventory-frontend-${env.NEW_COLOR} ./helm-charts/frontend \

@@ -106,15 +106,15 @@ pipeline {
           }
         }
 
-        stage("Helm Deploy to ${env.NEW_COLOR} Color") {
+        stage("Helm Deploy to Cluster") {
           steps {
             sh """
               helm upgrade --install inventory-backend-${env.NEW_COLOR} ./helm-charts/backend \
-                --set image.tag=${env.IMAGE_TAG1}
-                --set db_host=${env.DB_HOST}
-                --set color=${env.NEW_COLOR}
-                --set activeColor=${env.ACTIVE_COLOR}
-                --set frontend_host=${env.FRONTEND_HOST}
+                --set image.tag=${env.IMAGE_TAG1} \
+                --set db_host=${env.DB_HOST} \
+                --set color=${env.NEW_COLOR} \
+                --set activeColor=${env.ACTIVE_COLOR} \
+                --set frontend_host=${env.FRONTEND_HOST} \
                 --set frontend_port=${env.FRONTEND_PORT}
             """
           }
