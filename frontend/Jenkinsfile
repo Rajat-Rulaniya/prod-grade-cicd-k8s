@@ -77,7 +77,7 @@ pipeline {
       post {
         failure {
           slackSend channel: '#security-alerts',
-                    message: "❌ SECURITY VULNERABILITIES FOUND! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    message: "❌ SECURITY VULNERABILITIES FOUND! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
                     color: 'danger'
         }
       }
@@ -160,7 +160,7 @@ pipeline {
       post {
         failure {
           slackSend channel: '#frontend-alerts',
-                    message: "❌ HELM DEPLOYMENT FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    message: "❌ HELM DEPLOYMENT FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
                     color: 'danger'
         }
       }
@@ -177,7 +177,7 @@ pipeline {
         failure {
           echo "The new deployment failed, COLOR: ${env.NEW_COLOR}"
           slackSend channel: '#frontend-alerts',
-                    message: "❌ ${env.NEW_COLOR} DEPLOYMENT FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    message: "❌ ${env.NEW_COLOR} DEPLOYMENT FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
                     color: 'danger'
 
           // Can be added: Delete the new deployment on failure.
@@ -203,7 +203,7 @@ pipeline {
       post {
         success {
           slackSend channel: '#frontend-alerts',
-                    message: "✅ *${env.NEW_COLOR}* DEPLOYMENT SUCCESSFULL!! ✅\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    message: "✅ *${env.NEW_COLOR}* DEPLOYMENT SUCCESSFULL!! ✅\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
                     color: 'good'
         }
       }
