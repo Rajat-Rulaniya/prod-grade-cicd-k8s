@@ -33,7 +33,7 @@ logs/
 # Spring Boot
 application-local.properties
 
-.env*
+.env
 secrets.yaml
 
 sample/
