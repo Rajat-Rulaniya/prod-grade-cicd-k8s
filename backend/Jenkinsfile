@@ -1,153 +1,209 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-        DOCKER_LOGIN = credentials('docker-login')
-        IMAGE_REPOSITORY = 'rajatrulaniya/inventory-backend'
+  environment {
+      DOCKER_LOGIN = credentials('docker-login')
+      IMAGE_REPOSITORY = 'rajatrulaniya/inventory-backend'
+  }
+  
+  stages {
+    stage('Set Image tags') {
+      steps {
+        script {
+          env.IMAGE_TAG1 = "v${env.INVENTORY_BACKEND_MAJOR}.${env.INVENTORY_BACKEND_MINOR}.${env.BUILD_NUMBER}"
+
+          env.IMAGE_TAG2 = "${env.GIT_COMMIT}"
+        }
+      }
     }
-    
-    stages {
-        stage('Set Image tags') {
-            steps {
-                script {
-                    env.IMAGE_TAG1 = "v${env.INVENTORY_BACKEND_MAJOR}.${env.INVENTORY_BACKEND_MINOR}.${env.BUILD_NUMBER}"
 
-                    env.IMAGE_TAG2 = "${env.GIT_COMMIT}"
-                }
-            }
+    stage('Build') {
+      steps {
+        dir('backend') {
+          sh "docker build -t inventory-backend-tester --target builder ."
         }
-
-        stage('Build & Test') {
-            steps {
-                dir('backend') {
-                    sh """
-                        docker build -t inventory-backend-tester --target builder .
-                        docker run --rm inventory-backend-tester mvn test || exit 1
-                    """
-                }
-            }
+      }
+      post {
+        failure {
+          slackSend channel: '#backend-alerts',
+                    message: "❌ FRONTEND BUILD FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
         }
-
-        stage('Image Build') {
-            steps {
-                dir('backend') {
-                    sh """
-                        echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin
-
-                        docker build \
-                            -t ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1} \
-                            -t ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG2} .
-                    """
-                }
-            }
-        }
-
-        stage('Image Scanning') {
-            steps {
-                sh """
-                    trivy image \
-                        --severity HIGH,CRITICAL \
-                        ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}
-                """
-            }
-        }
-
-        stage('Image Upload & Clean') {
-            steps {
-                sh """
-                    echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin 
-
-                    docker push ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}
-
-                    docker push ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG2}
-
-                    echo "Keeping only latest 4 images for backend; removing older ones..."
-
-                    docker images ${env.IMAGE_REPOSITORY} --format "{{.ID}} {{.CreatedAt}}" | sort -r -k2 | awk 'NR>4 {print \$1}' | sort -u | xargs -r docker rmi -f
-                """
-            }
-        }
-
-        stage('Determining Color') {
-          steps {
-            script {
-              def activeColor = sh(
-                script: "kubectl get svc backend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''",
-                returnStdout: true
-              ).trim()
-
-              def newColor
-              def first_deployment = "false"
-
-              if (activeColor == '') {
-                first_deployment = "true"
-                newColor = "blue"
-                activeColor = "blue"
-              } else {
-                newColor = (activeColor == "blue") ? "green" : "blue"
-              }
-
-              env.FIRST_DEPLOYMENT = first_deployment
-              env.ACTIVE_COLOR = activeColor
-              env.NEW_COLOR = newColor
-            }
-          }
-        }
-
-        stage('Apply base manifests') {
-          when {
-            expression { env.FIRST_DEPLOYMENT.toBoolean() }
-          }
-          steps {
-            sh """
-              kubectl apply -f ./base-k8s/backend/
-              kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"blue"}}}'
-            """
-          }
-        }
-
-        stage("Helm Deploy to Cluster") {
-          steps {
-            sh """
-              helm upgrade --install inventory-backend-${env.NEW_COLOR} ./helm-charts/backend \
-                --set image.tag=${env.IMAGE_TAG1} \
-                --set db_host=${env.INVENTORY_DB_HOST} \
-                --set color=${env.NEW_COLOR} \
-                --set activeColor=${env.ACTIVE_COLOR} \
-                --set frontend_host=${env.FRONTEND_HOST} \
-                --set frontend_port=${env.FRONTEND_PORT}
-            """
-          }
-        }
-
-        stage('Check Deployment Status') {
-          steps {
-            sh "sleep 7"
-            sh "kubectl rollout status deployment inventory-backend-${env.NEW_COLOR} --timeout=2m"
-          }
-          post {
-            failure {
-              echo "The new deployment failed, COLOR: ${env.NEW_COLOR}"
-
-              // Can be added: Delete the new deployment on failure.
-            }
-          }
-        }
-
-        // Checks can be added before switching traffic to new deployment
-
-        stage('Switch Traffic') {
-          steps {
-            script {
-              if (!env.FIRST_DEPLOYMENT.toBoolean()) {
-                sh """
-                  kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
-                """
-
-                // OPTIONAL: Delete the previous color only when you are sure that the current color is working fine.
-              }
-            }
-          }
-        }
+      }
     }
+
+    stage('Test') {
+      steps {
+        sh "docker run --rm inventory-backend-tester mvn test"
+      }
+      post {
+        failure {
+          slackSend channel: '#backend-alerts',
+                    message: "❌ TESTS FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+        }
+      }
+    }
+
+    stage('Image Build') {
+      steps {
+        dir('backend') {
+          sh """
+            echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin
+
+            docker build \
+              -t ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1} \
+              -t ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG2} .
+          """
+        }
+      }
+      post {
+        failure {
+          slackSend channel: '#backend-alerts',
+                    message: "❌ FAILED TO BUILD CONTAINER IMAGE! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+        }
+      }
+    }
+
+    stage('Image Scanning') {
+      steps {
+        sh """
+          trivy image \
+            --severity HIGH,CRITICAL \
+            ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}
+        """
+      }
+      post {
+        // will only work when we use --exit-code 1 in trivy scan (not implement currently)
+        failure {
+          slackSend channel: '#security-alerts',
+                    message: "❌ SECURITY VULNERABILITIES FOUND! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+        }
+      }
+    }
+
+    stage('Image Upload & Clean') {
+      steps {
+        sh """
+          echo "${env.DOCKER_LOGIN_PSW}" | docker login -u "${env.DOCKER_LOGIN_USR}" --password-stdin 
+
+          docker push ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG1}
+
+          docker push ${env.IMAGE_REPOSITORY}:${env.IMAGE_TAG2}
+
+          echo "Keeping only latest 4 images for backend; removing older ones..."
+
+          docker images ${env.IMAGE_REPOSITORY} --format "{{.ID}} {{.CreatedAt}}" | sort -r -k2 | awk 'NR>4 {print \$1}' | sort -u | xargs -r docker rmi -f
+        """
+      }
+    }
+
+    stage('Determining Color') {
+      steps {
+        script {
+          def activeColor = sh(
+            script: "kubectl get svc backend-service -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ''",
+            returnStdout: true
+          ).trim()
+
+          def newColor
+          def first_deployment = "false"
+
+          if (activeColor == '') {
+            first_deployment = "true"
+            newColor = "blue"
+            activeColor = "blue"
+          } else {
+            newColor = (activeColor == "blue") ? "green" : "blue"
+          }
+
+          env.FIRST_DEPLOYMENT = first_deployment
+          env.ACTIVE_COLOR = activeColor
+          env.NEW_COLOR = newColor
+        }
+      }
+    }
+
+    stage('Apply base manifests') {
+      when {
+        expression { env.FIRST_DEPLOYMENT.toBoolean() }
+      }
+      steps {
+        sh """
+          kubectl apply -f ./base-k8s/backend/
+          kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"blue"}}}'
+        """
+      }
+      post {
+        failure {
+          slackSend channel: '#backend-alerts',
+                    message: "❌ FAILED TO APPLY BASE MANIFESTS! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+        }
+      }
+    }
+
+    stage("Helm Deploy to Cluster") {
+      steps {
+        sh """
+          helm upgrade --install inventory-backend-${env.NEW_COLOR} ./helm-charts/backend \
+            --set image.tag=${env.IMAGE_TAG1} \
+            --set db_host=${env.INVENTORY_DB_HOST} \
+            --set color=${env.NEW_COLOR} \
+            --set activeColor=${env.ACTIVE_COLOR} \
+            --set frontend_host=${env.FRONTEND_HOST} \
+            --set frontend_port=${env.FRONTEND_PORT}
+        """
+      }
+      post {
+        failure {
+          slackSend channel: '#backend-alerts',
+                    message: "❌ HELM DEPLOYMENT FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+        }
+      }
+    }
+
+    stage('Check Deployment Status') {
+      steps {
+        sh "sleep 7"
+        sh "kubectl rollout status deployment inventory-backend-${env.NEW_COLOR} --timeout=2m"
+      }
+      post {
+        failure {
+          echo "The new deployment failed, COLOR: ${env.NEW_COLOR}"
+          slackSend channel: '#backend-alerts',
+                    message: "❌ ${env.NEW_COLOR} DEPLOYMENT FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+
+          // Can be added: Delete the new deployment on failure.
+        }
+      }
+    }
+
+    // Checks can be added before switching traffic to new deployment
+
+    stage('Switch Traffic') {
+      steps {
+        script {
+          if (!env.FIRST_DEPLOYMENT.toBoolean()) {
+            sh """
+              kubectl patch svc backend-service -p '{"spec":{"selector":{"color":"${env.NEW_COLOR}"}}}'
+            """
+
+            // OPTIONAL: Delete the previous color only when you are sure that the current color is working fine.
+          }
+        }
+      }
+      post {
+        success {
+          slackSend channel: '#backend-alerts',
+                    message: "✅ *${env.NEW_COLOR}* DEPLOYMENT SUCCESSFULL!! ✅\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'good'
+        }
+      }
+    }
+  }
 }

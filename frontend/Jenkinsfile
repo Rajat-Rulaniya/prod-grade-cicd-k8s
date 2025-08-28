@@ -103,7 +103,7 @@ pipeline {
       steps {
         script {
           def activeColor = sh(
-            script: "set +e; kubectl get svc frontend-service -o jsonpath=\"{.spec.selector.color}\" 2>/dev/null || echo ''",
+            script: "set +e; kubectl get svc frontend-service -o jsonpath=\"{.spec.selector.color}\" --request-timeout=15s 2>/dev/null || echo ''",
             returnStdout: true
           ).trim()
 
@@ -136,6 +136,13 @@ pipeline {
           kubectl apply -f ./base-k8s/frontend/
           kubectl patch svc frontend-service -p '{"spec":{"selector":{"color":"blue"}}}'
         """
+      }
+      post {
+        failure {
+          slackSend channel: '#frontend-alerts',
+                    message: "❌ FAILED TO APPLY BASE MANIFESTS! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    color: 'danger'
+        }
       }
     }
 
@@ -196,7 +203,7 @@ pipeline {
       post {
         success {
           slackSend channel: '#frontend-alerts',
-                    message: "✅ ${env.NEW_COLOR} DEPLOYMENT SUCCESSFULL!! ✅\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    message: "✅ *${env.NEW_COLOR}* DEPLOYMENT SUCCESSFULL!! ✅\n• Job: ${env.BUILD_NUMBER}\n• Image Name: ${env.IMAGE_TAG1}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
                     color: 'good'
         }
       }
