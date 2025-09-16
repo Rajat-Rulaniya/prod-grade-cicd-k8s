@@ -26,7 +26,7 @@ pipeline {
       post {
         failure {
           slackSend channel: '#backend-alerts',
-                    message: "❌ FRONTEND BUILD FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
+                    message: "❌ BACKEND BUILD FAILED! ❌\n• Job: ${env.BUILD_NUMBER}\n• Open: ${env.BUILD_URL}\n• Build Timestamp: ${env.BUILD_TIMESTAMP}",
                     color: 'danger'
         }
       }
